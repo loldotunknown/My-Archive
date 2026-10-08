@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Bug Archive Lol.unknown</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg:#030e16; --panel:#180c23; --muted:#3871a3; --accent:#258165;
+      --title:#e50c0c; --card-border:#7353cf; --header-blue:#407baf;
+      --tag-selected:#5b481d; --tag-selected-bg:rgba(255,209,102,0.12);
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:#eaf6f3;font-family:Inter,Segoe UI,Roboto,Arial}
+    .app{display:grid;grid-template-columns:260px 1fr;grid-template-rows:72px 1fr;grid-template-areas:"sidebar header" "sidebar main";height:100vh;overflow:hidden}
+    header{grid-area:header;display:flex;align-items:center;padding:14px 18px;background:linear-gradient(90deg,var(--header-blue), rgba(255,255,255,0.01));border-bottom:1px solid rgba(255,255,255,0.03)}
+    .sidebar{grid-area:sidebar;background:#071018;padding:14px;border-right:1px solid rgba(255,255,255,0.03);box-sizing:border-box;overflow:auto}
+    main{grid-area:main;padding:14px;overflow:auto}
+    h1{margin:0;color:var(--title);font-size:18px}
+    .controls{margin-left:auto;display:flex;gap:8px;align-items:center}
+    input[type="search"]{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:#071018;color:#eaf6f3;font-size:13px}
+    .btn{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:#071018;color:var(--muted);cursor:pointer;font-size:13px}
+    .side-item{display:block;padding:10px 12px;border-radius:8px;color:var(--muted);text-decoration:none;margin-bottom:8px;font-size:14px;cursor:pointer}
+    .side-item.active{background:rgba(126,231,199,0.06);color:var(--accent);font-weight:700}
+    .grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+    .card{width:420px;background:var(--panel);border:1px solid var(--card-border);border-radius:10px;padding:12px;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;min-height:120px}
+    .card h3{margin:0;color:var(--title);font-size:16px}
+    .card p{margin:8px 0 0;color:#d6eeea;font-size:13px;line-height:1.4;max-height:6.5em;overflow:auto;padding-right:6px}
+    .time{color:var(--muted);font-size:12px;margin-top:10px}
+    .card-footer{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .proof-btn{background:#0b2f2a;color:var(--accent);padding:7px 10px;border-radius:8px;border:1px solid rgba(126,231,199,0.06);text-decoration:none;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:8px}
+    .modal{position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;background:rgba(2,6,10,0.92);z-index:120;padding:20px;box-sizing:border-box}
+    .modal.open{display:flex}
+    .sheet{width:760px;max-width:calc(100% - 40px);max-height:calc(100vh - 40px);overflow:auto;background:linear-gradient(180deg,#071018,#07161b);padding:18px;border-radius:10px;box-sizing:border-box;border:1px solid rgba(255,255,255,0.03)}
+    /* sticky header inside modal */
+    .sheet header{position:sticky;top:0;z-index:6;background:linear-gradient(72deg, rgb(67 139 32 / 95%), rgb(55 180 221 / 90%));padding-bottom:10px}
+    .sheet .top-row{display:flex;align-items:center;gap:12px}
+    .sheet h2{margin:0;color:var(--title);font-size:25px}
+    .close{margin-left:auto;padding:8px 10px;border-radius:8px;background:#071018;border:1px solid rgba(255,255,255,0.02);color:var(--muted);cursor:pointer;font-size:13px}
+    .meta-block{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;margin-top:8px}
+    .meta-block .desc{font-weight:700;color:#eaf6f3;font-size:15px}
+    .meta-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px}
+    .meta-row .value{color:var(--muted);font-size:13px}
+    .tag-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+    .tag-chip{background:transparent;color:var(--muted);padding:6px 10px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,0.02);cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:8px}
+    /* selected tag indicator (emoji visible on tag itself) */
+    .tag-chip.selected{color:var(--tag-selected);background:var(--tag-selected-bg);border-color:rgba(255,209,102,0.18);font-weight:700}
+    .tag-chip .emoji{display:inline-block;margin-left:6px;font-size:14px;line-height:1}
+    .steps{margin-top:12px;padding-left:18px}
+    .steps li{margin:8px 0;color:#e6f6f2;font-size:14px}
+    .actual{margin-top:12px;color:#e6f6f2;font-size:14px}
+    .proof-links{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+    .proof-line{display:flex;align-items:center;gap:8px}
+    .proof-text{user-select:text;color:var(--muted);font-size:13px;word-break:break-all;padding:6px;border-radius:6px;background:rgba(255,255,255,0.01);flex:1}
+    .copy-btn{padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.03);background:#071018;color:var(--muted);cursor:pointer;font-size:12px}
+    .data-block{margin-top:12px;color:var(--muted);font-size:13px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.01)}
+    .folder{border:1px solid rgba(255,255,255,0.03);border-radius:8px;margin-bottom:10px;background:rgba(255,255,255,0.01)}
+    .folder-header{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer}
+    .folder-header .title{font-weight:700;color:#eaf6f3}
+    .folder-list{padding:0 12px 12px 12px;display:none}
+    .folder-row{padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.01);cursor:pointer}
+    .folder-row:last-child{border-bottom:0}
+    @media (max-width:800px){ .sheet{width:100%;height:100%;max-height:100vh;border-radius:0;padding:12px} .card{width:100%} }
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Bug archive app">
+    <header>
+      <div style="display:flex;align-items:center;gap:12px"><h1>lol.unknown’s Archive</h1></div>
+      <div class="controls" role="region" aria-label="controls">
+        <input id="search" type="search" placeholder="Search name, description, steps, actual..." aria-label="Search reports (excludes tags)" />
+        <input id="fileInput" type="file" accept=".json" style="display:none" />
+        <button id="loadFile" class="btn" type="button">Load JSON</button>
+        <button id="reload" class="btn" type="button">Reload bugs.json</button>
+        <div id="status" style="color:var(--muted);font-size:13px;margin-left:8px">No file loaded</div>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Navigation">
+      <div class="side-item active" data-view="home" role="button" tabindex="0">Home</div>
+      <div class="side-item" data-view="by_month" role="button" tabindex="0">By months</div>
+      <div class="side-item" data-view="graph" role="button" tabindex="0">Graph</div>
+
+      <div style="margin-top:18px">
+        <div style="color:var(--muted);font-size:13px;margin-bottom:8px">Tag search</div>
+        <input id="tagInput" type="search" placeholder="Type to filter tags..." aria-label="Search tags" style="padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:#071018;color:#eaf6f3;font-size:13px" />
+        <div id="tagChips" class="tag-chips" style="margin-top:10px;display:none"></div>
+      </div>
+    </aside>
+
+    <main>
+      <div id="view-home">
+        <div id="empty" style="color:var(--muted);padding:12px">Load your <strong>bugs.json</strong> using the button above to view reports.</div>
+        <div class="grid" id="bugGrid" aria-live="polite"></div>
+      </div>
+
+      <div id="view-by_month" style="display:none"><div id="monthsWrap"></div></div>
+      <div id="view-graph" style="display:none"><div style="color:var(--muted);padding:12px">Graph view (reports per month)</div><canvas id="monthChart" width="1200" height="360" style="width:100%;height:360px"></canvas></div>
+    </main>
+  </div>
+
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="sheet" role="document" aria-label="Report details">
+      <header>
+        <div class="top-row">
+          <h2 id="modalTitle">Report</h2>
+          <button class="close" id="modalClose" aria-label="Close report view">Close</button>
+        </div>
+      </header>
+
+      <div class="meta-block" id="metaBlock">
+        <div class="desc" id="modalDesc"></div>
+
+        <div class="meta-row" style="margin-top:8px">
+          <div class="value" id="modalTime"></div>
+        </div>
+
+        <div class="meta-row" style="margin-top:8px">
+          <div><strong style="color:#fff;font-size:13px">Icon</strong><div class="value" id="modalDate" style="margin-top:13px"></div></div>
+        </div>
+
+        <div id="modalProofs" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"></div>
+
+        <div style="margin-top:12px">
+          <strong style="color:#fff;font-size:13px">Proof links</strong>
+          <div id="modalProofLinks" class="proof-links"></div>
+        </div>
+      </div>
+
+      <div class="meta-block" style="margin-top:12px">
+        <h3 style="margin:0 0 8px;color:var(--title);font-size:14px">Steps to reproduce</h3>
+        <ol id="modalSteps" class="steps"></ol>
+
+        <h3 style="margin:12px 0 8px;color:var(--title);font-size:14px">Actual</h3>
+        <div id="modalActual" class="actual"></div>
+
+        <div style="margin-top:12px">
+          <strong style="color:#fff;font-size:13px">Data</strong>
+          <div id="modalData" class="data-block"></div>
+        </div>
+
+        <div style="margin-top:12px">
+          <strong style="color:#fff;font-size:13px">Tags</strong>
+          <div id="modalTagsList" class="data-block"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const safe = v => v === null || v === undefined ? '' : String(v);
+
+    // state
+    let items = [];
+    let activeTagFilters = new Set();
+    let modalTagsSet = new Set();
+    const uploadedMap = new Map();
+    const localHandles = new Map();
+
+    // helpers
+    function parseTags(raw){
+      if(!raw) return [];
+      return String(raw).split(/\s+/).map(s => s.trim()).filter(Boolean).map(s => s.toLowerCase());
+    }
+    function parseProofLinks(raw){
+      if(!raw) return [];
+      return String(raw).split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    }
+    function prettyTime(t){
+      if(!t) return '';
+      if(/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(t)) return t.replace('T',' ').slice(0,16);
+      return String(t).split(/\r?\n/)[0];
+    }
+
+    // render list
+    function renderList(list){
+      const grid = $('bugGrid'); grid.innerHTML = '';
+      if(!list.length){ $('empty').style.display = 'block'; return; }
+      $('empty').style.display = 'none';
+      list.forEach(b => {
+        const card = document.createElement('div'); card.className = 'card';
+        const proofs = parseProofLinks(b.Proof);
+        const proofBtns = proofs.map((lnk, idx) => `<a class="proof-btn" href="${esc(lnk)}" target="_blank" rel="noopener">Drive ${idx+1}</a>`).join(' ');
+        card.innerHTML = `<h3>${esc(b.Name)}</h3><p>${esc(b.Description)}</p><div class="card-footer"><div><div class="time">${esc(prettyTime(b.Time))}</div></div><div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${proofBtns || `<span style="color:var(--muted)">No proof</span>`}</div></div>`;
+        card.addEventListener('click', (e) => { if(e.target.closest('.proof-btn')) return; openModal(b); });
+        grid.appendChild(card);
+      });
+      document.querySelector('main').scrollTop = 0;
+    }
+
+    // tag chips in sidebar (only visible while typing or when filters exist)
+    function buildTagSet(){
+      const set = new Set();
+      items.forEach(it => parseTags(it.Tags).forEach(t => set.add(t)));
+      return Array.from(set).sort();
+    }
+    function populateTagChips(visibleQuery = ''){
+      const chipsWrap = $('tagChips'); const allTags = buildTagSet();
+      if(!visibleQuery || visibleQuery.trim().length === 0){
+        if(activeTagFilters.size === 0){ chipsWrap.style.display = 'none'; chipsWrap.innerHTML = ''; return; }
+      }
+      const q = visibleQuery.toLowerCase();
+      const filtered = q ? allTags.filter(t => t.includes(q)) : Array.from(activeTagFilters);
+      chipsWrap.innerHTML = ''; chipsWrap.style.display = filtered.length ? '' : 'none';
+      filtered.forEach(tag => {
+        const chip = document.createElement('div'); chip.className = 'tag-chip'; chip.dataset.tag = tag; chip.tabIndex = 0;
+        chip.innerHTML = `<span class="label">${esc(tag)}</span><span class="emoji" aria-hidden="true">${activeTagFilters.has(tag) ? '✅' : ''}</span>`;
+        if(activeTagFilters.has(tag)) chip.classList.add('selected');
+        chip.addEventListener('click', () => {
+          if(activeTagFilters.has(tag)) activeTagFilters.delete(tag); else activeTagFilters.add(tag);
+          populateTagChips($('tagInput').value.trim());
+          applyFiltersAndRender();
+          refreshModalTagSelection();
+        });
+        chipsWrap.appendChild(chip);
+      });
+      // after building chips, update modal membership visuals if modal open
+      updateModalMembershipVisuals();
+    }
+
+    // modal open/close and tag rendering inside modal
+    function openModal(b){
+      $('modalTitle').textContent = safe(b.Name);
+      $('modalDesc').textContent = safe(b.Description);
+      $('modalTime').textContent = b.Time ? prettyTime(b.Time) : '';
+      $('modalProofs').innerHTML = parseProofLinks(b.Proof).map((lnk, idx) => `<a class="proof-btn" href="${esc(lnk)}" target="_blank" rel="noopener">Drive ${idx+1}</a>`).join(' ') || `<span style="color:var(--muted)">No proof</span>`;
+      $('modalProofLinks').innerHTML = buildProofLinksHtml(parseProofLinks(b.Proof));
+      $('modalSteps').innerHTML = renderStepsHtml(b.Steps);
+      $('modalActual').textContent = safe(b.Actual);
+      $('modalData').innerHTML = b.Data ? `<pre style="white-space:pre-wrap;margin:0">${esc(b.Data)}</pre>` : '<div style="color:var(--muted)">(no data)</div>';
+
+      // modal tags
+      const tags = parseTags(b.Tags);
+      modalTagsSet = new Set(tags);
+      const tagsList = $('modalTagsList'); tagsList.innerHTML = '';
+      if(tags.length){
+        tags.forEach(t => {
+          const el = document.createElement('div'); el.className = 'tag-chip'; el.dataset.tag = t; el.style.display = 'inline-flex'; el.style.margin = '4px';
+          el.innerHTML = `<span class="label">${esc(t)}</span><span class="emoji" aria-hidden="true">${activeTagFilters.has(t) ? '✅' : ''}</span>`;
+          if(activeTagFilters.has(t)) el.classList.add('selected');
+          el.addEventListener('click', () => {
+            if(activeTagFilters.has(t)) activeTagFilters.delete(t); else activeTagFilters.add(t);
+            populateTagChips($('tagInput').value.trim());
+            applyFiltersAndRender();
+            refreshModalTagSelection();
+          });
+          tagsList.appendChild(el);
+        });
+      } else {
+        tagsList.innerHTML = '<div style="color:var(--muted)">(no tags)</div>';
+      }
+
+      // show modal and update sidebar chips to reflect modal tags (visual only)
+      $('modal').classList.add('open'); $('modal').setAttribute('aria-hidden','false'); document.documentElement.style.overflow = 'hidden';
+      populateTagChips($('tagInput').value.trim());
+      refreshModalTagSelection();
+      $('modalClose').focus();
+    }
+
+    function closeModal(){
+      $('modal').classList.remove('open'); $('modal').setAttribute('aria-hidden','true'); document.documentElement.style.overflow = '';
+      modalTagsSet = new Set();
+      populateTagChips($('tagInput').value.trim());
+    }
+
+    function refreshModalTagSelection(){
+      // update modal tag visuals (selected state + emoji)
+      const modalTags = Array.from(document.querySelectorAll('#modalTagsList .tag-chip'));
+      modalTags.forEach(el => {
+        const t = el.dataset.tag;
+        if(!t) return;
+        el.classList.toggle('selected', activeTagFilters.has(t));
+        const emoji = el.querySelector('.emoji');
+        if(emoji) emoji.textContent = activeTagFilters.has(t) ? '✅' : '';
+      });
+      // update sidebar chips selected state and emoji
+      const sideChips = Array.from(document.querySelectorAll('#tagChips .tag-chip'));
+      sideChips.forEach(chip => {
+        const t = chip.dataset.tag;
+        if(!t) return;
+        chip.classList.toggle('selected', activeTagFilters.has(t));
+        const emoji = chip.querySelector('.emoji');
+        if(emoji) emoji.textContent = activeTagFilters.has(t) ? '✅' : '';
+      });
+      // update membership visuals (subtle outline) for chips that belong to modal
+      updateModalMembershipVisuals();
+    }
+
+    function updateModalMembershipVisuals(){
+      const sideChips = Array.from(document.querySelectorAll('#tagChips .tag-chip'));
+      sideChips.forEach(chip => {
+        const t = chip.dataset.tag;
+        if(!t) return;
+        if(modalTagsSet.size && modalTagsSet.has(t)){
+          chip.style.boxShadow = 'inset 0 0 0 1px rgba(255,255,255,0.02)';
+        } else {
+          chip.style.boxShadow = '';
+        }
+      });
+    }
+
+    // small helpers for proof links and steps
+    function buildProofLinksHtml(proofLines){
+      if(!proofLines || !proofLines.length) return '<div style="color:var(--muted)">No proof links</div>';
+      return proofLines.map((lnk, idx) => `<div class="proof-line" data-idx="${idx}"><div class="proof-text" tabindex="0">${esc(lnk)}</div><button class="copy-btn" data-copy="${esc(lnk)}">Copy</button></div>`).join('');
+    }
+    function renderStepsHtml(raw){
+      if(!raw) return '<li style="color:var(--muted)">No steps provided</li>';
+      const text = String(raw).trim();
+      let parts = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      if(parts.length === 1){
+        const single = parts[0];
+        let byParen = single.split(/(?=\d+\))/).map(s=>s.trim()).filter(Boolean);
+        if(byParen.length > 1) parts = byParen;
+        else {
+          let byDot = single.split(/(?=\d+\.)/).map(s=>s.trim()).filter(Boolean);
+          if(byDot.length > 1) parts = byDot;
+          else if(single.includes(' - ')) parts = single.split(' - ').map(s=>s.trim()).filter(Boolean);
+          else if(single.includes(';')) parts = single.split(';').map(s=>s.trim()).filter(Boolean);
+          else if(single.includes('. ')) {
+            const sents = single.split(/(?<=\.)\s+/).map(s=>s.trim()).filter(Boolean);
+            if(sents.length > 1) parts = sents;
+          }
+        }
+      }
+      return parts.map(p => `<li>${esc(p)}</li>`).join('');
+    }
+
+    // event handlers
+    $('modalClose').addEventListener('click', closeModal);
+    $('modal').addEventListener('click', (e) => { if(e.target === $('modal')) closeModal(); });
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
+
+    document.addEventListener('click', async (e) => {
+      const copyBtn = e.target.closest('.copy-btn');
+      if(copyBtn){
+        const text = copyBtn.getAttribute('data-copy') || '';
+        try{ await navigator.clipboard.writeText(text); const prev = copyBtn.textContent; copyBtn.textContent = 'Copied'; setTimeout(()=> copyBtn.textContent = prev, 1200); }catch(err){
+          const parent = copyBtn.closest('.proof-line'); if(parent){ const txt = parent.querySelector('.proof-text'); if(txt){ const range = document.createRange(); range.selectNodeContents(txt); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); } }
+        }
+        return;
+      }
+    });
+
+    // months view (collapsible)
+    function buildMonthsView(){
+      const wrap = $('monthsWrap'); wrap.innerHTML = ''; const map = {};
+      items.forEach(it => {
+        const d = it.Data || it.Time || '';
+        const m = (d.match(/^(\d{4}-\d{2})/) || [null, 'Unknown'])[1];
+        (map[m] = map[m] || []).push(it);
+      });
+      const keys = Object.keys(map).sort((a,b) => b.localeCompare(a));
+      if(!keys.length){ wrap.innerHTML = '<div style="color:var(--muted)">No items</div>'; return; }
+      keys.forEach(k => {
+        const folder = document.createElement('div'); folder.className = 'folder';
+        const header = document.createElement('div'); header.className = 'folder-header';
+        header.innerHTML = `<div class="title">${k}</div><div style="color:var(--muted)">${map[k].length} reports</div>`;
+        const list = document.createElement('div'); list.className = 'folder-list'; list.style.display = 'none';
+        map[k].forEach(it => {
+          const row = document.createElement('div'); row.className = 'folder-row';
+          row.innerHTML = `<div style="font-weight:700;color:var(--title)">${esc(it.Name)}</div><div style="color:var(--muted);font-size:13px;margin-top:6px">${esc(prettyTime(it.Time))}</div>`;
+          row.addEventListener('click', (ev) => { ev.stopPropagation(); openModal(it); });
+          list.appendChild(row);
+        });
+        header.addEventListener('click', () => { list.style.display = list.style.display === 'none' ? 'block' : 'none'; });
+        folder.appendChild(header); folder.appendChild(list); wrap.appendChild(folder);
+      });
+    }
+
+    // graph (unchanged)
+    function drawGraph(){
+      const canvas = $('monthChart'); if(!canvas) return;
+      const ctx = canvas.getContext('2d'); const counts = {};
+      items.forEach(it => {
+        const d = it.Data || it.Time || '';
+        const m = (d.match(/^(\d{4}-\d{2})/) || [null, 'Unknown'])[1];
+        counts[m] = (counts[m] || 0) + 1;
+      });
+      const keys = Object.keys(counts).sort(); const values = keys.map(k => counts[k]);
+      const DPR = window.devicePixelRatio || 1; canvas.width = canvas.clientWidth * DPR; canvas.height = canvas.clientHeight * DPR; ctx.setTransform(DPR,0,0,DPR,0,0); ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);
+      const padding = 36; const chartW = canvas.clientWidth - padding*2; const chartH = canvas.clientHeight - padding*2;
+      ctx.font = '12px Inter, Arial'; ctx.fillStyle = '#9fb0bf'; const max = Math.max(1, ...values); ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+      for(let i=0;i<=4;i++){ const y = padding + (chartH * i / 4); ctx.beginPath(); ctx.moveTo(padding, y); ctx.lineTo(padding + chartW, y); ctx.stroke(); const label = Math.round(max * (1 - i/4)); ctx.fillText(String(label), 8, y+4); }
+      const barSlot = chartW / Math.max(1, keys.length); const barW = Math.max(12, barSlot * 0.6);
+      keys.forEach((k, idx) => { const v = values[idx]; const x = padding + barSlot * idx + (barSlot - barW)/2; const h = (v / max) * chartH; const y = padding + chartH - h; ctx.fillStyle = '#7ee7c7'; ctx.fillRect(x, y, barW, h); ctx.save(); ctx.translate(x + barW/2, padding + chartH + 16); ctx.rotate(-Math.PI/4); ctx.textAlign = 'right'; ctx.fillStyle = '#9fb0bf'; ctx.fillText(k, 0, 0); ctx.restore(); });
+      ctx.fillStyle = '#ffd166'; ctx.font = '16px Inter, Arial'; ctx.fillText('Reports per month', padding, 18);
+    }
+
+    // search & wiring
+    $('search').addEventListener('input', () => applyFiltersAndRender());
+    $('tagInput').addEventListener('input', (e) => { const q = e.target.value.trim(); populateTagChips(q); if(q) applyFiltersAndRender(); });
+
+    function applyFiltersAndRender(){
+      const q = $('search').value.trim().toLowerCase();
+      let list = items.slice();
+      if(activeTagFilters.size){
+        list = list.filter(it => {
+          const tags = parseTags(it.Tags);
+          for(const t of activeTagFilters){ if(!tags.includes(t)) return false; }
+          return true;
+        });
+      }
+      if(q){
+        list = list.filter(i => (safe(i.Name)+' '+safe(i.Description)+' '+safe(i.Steps)+' '+safe(i.Actual)).toLowerCase().includes(q));
+      }
+      renderList(list);
+    }
+
+    function showView(view){
+      $('view-home').style.display = view === 'home' ? '' : 'none';
+      $('view-by_month').style.display = view === 'by_month' ? '' : 'none';
+      $('view-graph').style.display = view === 'graph' ? '' : 'none';
+      document.querySelectorAll('.side-item').forEach(si => si.classList.toggle('active', si.dataset.view === view));
+      if(view === 'by_month') buildMonthsView();
+      if(view === 'graph') drawGraph();
+      document.querySelector('main').scrollTop = 0;
+    }
+    document.querySelectorAll('.side-item').forEach(si => si.addEventListener('click', () => showView(si.dataset.view)));
+
+    // file load / reload
+    $('loadFile').addEventListener('click', () => $('fileInput').click());
+    $('fileInput').addEventListener('change', e => {
+      const f = e.target.files[0]; if(!f) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try{
+          const data = JSON.parse(ev.target.result);
+          if(!Array.isArray(data)) throw new Error('JSON is not an array');
+          items = normalizeRows(data);
+          $('status').textContent = `Loaded ${items.length} items`;
+          populateTagChips($('tagInput').value.trim());
+          applyFiltersAndRender();
+        }catch(err){ $('status').textContent = 'Invalid JSON file'; console.error(err); }
+      };
+      reader.readAsText(f); e.target.value = '';
+    });
+    $('reload').addEventListener('click', async () => {
+      $('status').textContent = 'Loading bugs.json…';
+      try{
+        const res = await fetch('bugs.json', {cache:'no-store'});
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if(!Array.isArray(data)) throw new Error('JSON is not an array');
+        items = normalizeRows(data);
+        $('status').textContent = `Loaded ${items.length} items`;
+        populateTagChips($('tagInput').value.trim());
+        applyFiltersAndRender();
+      }catch(err){ $('status').textContent = 'Failed to load bugs.json — use Load JSON'; console.error(err); }
+    });
+
+    function normalizeRows(data){
+      return data.map(row => {
+        const rawTime = row.Time || row['Time'] || '';
+        const firstLineTime = String(rawTime).split(/\r?\n/)[0] || '';
+        return {
+          Name: row.Name || row['Name'] || '',
+          Description: row.Description || row['Description'] || '',
+          Steps: row.Steps || row['Steps'] || row['Steps to reproduce'] || '',
+          Actual: row.Actual || row['Actual'] || '',
+          Proof: row.Proof || row['Proof'] || '',
+          Data: row.Data || row['Data'] || row['Date'] || '',
+          Tags: row.Tags || row['Tags'] || '',
+          Time: firstLineTime
+        };
+      });
+    }
+
+    // initial
+    $('status').textContent = 'No file loaded';
+    showView('home');
+  </script>
+</body>
+</html>
